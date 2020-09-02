@@ -1,0 +1,19 @@
+<IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Opções -MultiViews
+    </IfModule>
+    
+    RewriteEngine On
+    
+    RewriteCond% {REQUEST_FILENAME} -d [OU]
+    RewriteCond% {REQUEST_FILENAME} -f
+    RewriteRule ^ ^ $ 1 [N]
+
+    RewriteCond% {REQUEST_URI} (\. \ W + $) [NC]
+    RewriteRule ^ (. *) $ Public / $ 1 
+
+    RewriteCond% {REQUEST_FILENAME}! -D
+    RewriteCond% {REQUEST_FILENAME}! -F
+    RewriteRule ^ server.php
+
+</IfModule>
