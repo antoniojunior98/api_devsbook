@@ -3,9 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Post;
+use App\PostComment;
 use App\PostLike;
 use App\User;
-use App\UserReletion;
+use App\UserRelation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -31,7 +32,6 @@ class FeedController extends Controller
         ]);
 
         $validate = Validator::make($data, [
-            'type' => 'required|string|max:10',
             'body' => 'string',
             'photo' => 'file',
         ]);
@@ -83,7 +83,7 @@ class FeedController extends Controller
         $users = [];
         $id_user = $this->loggedUser['id'];
 
-        $userList = UserReletion::where("user_from", $id_user);
+        $userList = UserRelation::where("user_from", $id_user);
         foreach ($userList as $item) {
             $users[] = $item['user_to'];
         }
@@ -134,6 +134,7 @@ class FeedController extends Controller
 
     private function _postListToObject($postList, $id_user)
     {
+        $posts = [];
         foreach ($postList as $postKey => $post) {
 
             if ($post['id_user'] == $id_user) {
@@ -142,10 +143,13 @@ class FeedController extends Controller
                 $posts[$postKey]['mine'] = false;
             }
 
-            $userInfo = User::find($post['id_user']);
-            $userInfo['avatar'] = url('storage/avatar/' . $userInfo['avatar']);
-            $userInfo['cover'] = url('storage/cover/' . $userInfo['cover']);
+            $user = User::find($post['id_user']);
+            $userInfo['name'] = $user['name'];
+            $userInfo['avatar'] = url('storage/avatar/' . $user['avatar']);
+            $userInfo['cover'] = url('storage/cover/' . $user['cover']);
             $posts[$postKey]['users'] = $userInfo;
+
+            $posts[$postKey]['body'] = $post['body'];
 
             $likes = PostLike::where("id_post", $post['id'])->count();
             $posts[$postKey]['likes'] = $likes;
@@ -156,13 +160,15 @@ class FeedController extends Controller
 
             $posts[$postKey]['liked'] = ($isLiked) ? true : false;
 
-            $comments = $post['comments'];
+            $comments = PostComment::where("id_post", $post['id'])->get(); 
 
-            foreach ($comments as $commentKey => $coment) {
+            foreach ($comments as $commentKey => $comment) {
                 $user = User::find($post['id_user']);
+                $user['name'] = $user['name'];
                 $user['avatar'] = url('storage/avatar/' . $user['avatar']);
                 $user['cover'] = url('storage/cover/' . $user['cover']);
                 $comments[$commentKey]['users'] = $user;
+                $comments[$commentKey]['comment'] = $comment;
             }
             $posts[$postKey]['comments'] = $comments;
         }
